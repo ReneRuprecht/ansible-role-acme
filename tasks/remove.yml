@@ -27,17 +27,6 @@
       ansible.builtin.set_fact:
         acme_domains_to_remove: "{{ acme_active_domains | reject('in', acme_wanted_domains) | list }}"
 
-- name: Remove certs from cron job
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when: acme_domains_to_remove is defined
-  ansible.builtin.command: >-
-    ./acme.sh --remove -d {{ item }}
-  args:
-    chdir: "~/.acme.sh"
-  register: acme_domain_remove_cron_output
-  changed_when: "'has been removed' in acme_domain_remove_cron_output.stdout"
-  loop: "{{ acme_domains_to_remove }}"
-
 - name: Find installed certs to delete
   no_log: "{{ acme_debug_log | default(true) }}"
   when: acme_domains_to_remove is defined
@@ -79,3 +68,15 @@
     path: "{{ item.path }}"
     state: "absent"
   loop: "{{ acme_internal_cert_dir_to_delete.results | map(attribute='files') | flatten }}"
+
+- name: Remove certs from cron job
+  no_log: "{{ acme_debug_log | default(true) }}"
+  when: acme_domains_to_remove is defined
+  ansible.builtin.command: >-
+    ./acme.sh --remove -d {{ item }}
+  args:
+    chdir: "~/.acme.sh"
+  register: acme_domain_remove_cron_output
+  changed_when: "'has been removed' in acme_domain_remove_cron_output.stdout"
+  loop: "{{ acme_domains_to_remove }}"
+
