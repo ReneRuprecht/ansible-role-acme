@@ -1,0 +1,16 @@
+---
+acme_upgrade: false
+# acme_account_email: "example@example.com"
+acme_certs_dest_path: "/etc/acme/certs"
+
+acme_dns_provider: "dns_cf"
+# acme_dns_provider_api_keys:
+#   CF_Token: "exmaple-token"
+#   CF_Email: "exmaple@example.com"
+acme_ca_server: "letsencrypt"
+
+acme_dns_sleep: 120
+acme_staging: true
+
+acme_cert_domains: []
+# - domains: test.default.example.com

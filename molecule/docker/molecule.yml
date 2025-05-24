@@ -1,0 +1,26 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: instance
+    image: "geerlingguy/docker-${MOLECULE_DISTRO:-debian12}-ansible:latest"
+
+provisioner:
+  name: ansible
+  inventory:
+    host_vars:
+      instance:
+        acme_account_email: "example@example.com"
+        acme_dns_provider_api_keys:
+          CF_Token: "token"
+          CF_Email: "email"
+        acme_cert_domains:
+          - domains: [domain]
+  playbooks:
+    converge: ${MOLECULE_PLAYBOOK:-converge.yml}
+verifier:
+  name: ansible

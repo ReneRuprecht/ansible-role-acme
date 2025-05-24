@@ -1,0 +1,53 @@
+- name: Ensure certs destination exists
+  ansible.builtin.file:
+    path: "{{ acme_certs_dest_path }}"
+    state: "directory"
+    mode: "0755"
+
+- name: Issue certificates
+  ansible.builtin.command: >-
+    ./acme.sh --issue -d {{ item.domains | join(" -d ") }}
+    --dns {{ acme_dns_provider }}
+    --dnssleep {{ acme_dns_sleep }}
+    {{ "--server " + (item.server | default(acme_ca_server)) if not (item.staging | default(acme_staging)) else "" }}
+    {{ "--staging" if item.staging | default(acme_staging) else "" }}
+  args:
+    chdir: "~/.acme.sh"
+  environment: "{{ acme_dns_provider_api_keys }}"
+  loop: "{{ acme_cert_domains }}"
+  when:
+    - >-
+      acme_cert_domains and
+      item.domains is defined and
+      item.domains
+    - acme_dns_provider
+    - acme_dns_provider_api_keys
+  register: acme_cert_issue_result
+  changed_when: >-
+    acme_cert_issue_result.rc == 0 and
+    "Cert success" in acme_cert_issue_result.stdout
+  failed_when: >-
+    acme_cert_issue_result.rc != 0 and
+    "Domains not changed" not in acme_cert_issue_result.stdout
+
+- name: Install certificates
+  ansible.builtin.command: >-
+    ./acme.sh --install-cert -d {{ item.domains | first }}
+    --fullchain-file {{ acme_certs_dest_path }}/{{ item.domains | first }}.pem
+    --key-file {{ acme_certs_dest_path }}/{{ item.domains | first }}.key
+  args:
+    chdir: "~/.acme.sh"
+  loop: "{{ acme_cert_domains }}"
+  loop_control:
+    index_var: index
+  when:
+    - >-
+      acme_cert_domains and
+      item.domains is defined and
+      item.domains
+  register: acme_install_cert_result
+  changed_when: >-
+    acme_cert_issue_result.results[index].changed
+  failed_when: >-
+    acme_install_cert_result.rc != 0 and
+    "Reload error for" not in acme_install_cert_result.stderr

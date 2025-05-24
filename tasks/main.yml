@@ -1,0 +1,12 @@
+---
+- name: Import install
+  ansible.builtin.import_tasks:
+    file: install.yml
+
+- name: Import create certs
+  ansible.builtin.import_tasks:
+    file: create.yml
+
+- name: Import remove certs
+  ansible.builtin.import_tasks:
+    file: remove.yml
