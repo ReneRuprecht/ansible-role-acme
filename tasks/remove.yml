@@ -55,7 +55,7 @@
     - acme_installed_certs_to_delete.results is defined
     - (acme_installed_certs_to_delete.results | map(attribute='files') | flatten | length) > 0
   ansible.builtin.file:
-    path: "{{ item.path }}"
+    path: "{{ item.path | replace('*', 'wildcard') }}"
     state: "absent"
   loop: "{{ acme_installed_certs_to_delete.results | map(attribute='files') | flatten }}"
 

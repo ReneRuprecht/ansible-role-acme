@@ -33,8 +33,8 @@
 - name: Install certificates
   ansible.builtin.command: >-
     ./acme.sh --install-cert -d {{ item.domains | first }}
-    --fullchain-file {{ acme_certs_dest_path }}/{{ item.domains | first }}.pem
-    --key-file {{ acme_certs_dest_path }}/{{ item.domains | first }}.key
+    --fullchain-file {{ acme_certs_dest_path }}/{{ item.domains | first | regex_replace('^\*', 'wildcard') }}.pem
+    --key-file {{ acme_certs_dest_path }}/{{ item.domains | first  | regex_replace('^\*', 'wildcard') }}.key
   args:
     chdir: "~/.acme.sh"
   loop: "{{ acme_cert_domains }}"
