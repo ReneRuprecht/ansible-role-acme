@@ -14,3 +14,9 @@ acme_staging: true
 
 acme_cert_domains: []
 # - domains: test.default.example.com
+#
+
+acme_vault_addr: ""
+acme_vault_push_enabled: false
+acme_deploy_vault_script_dir: "/opt/acme_scripts"
+acme_deploy_vault_script: "{{ acme_deploy_vault_script_dir }}/vault_deploy.sh"

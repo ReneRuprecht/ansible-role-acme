@@ -35,6 +35,7 @@
     ./acme.sh --install-cert -d {{ item.domains | first }}
     --fullchain-file {{ acme_certs_dest_path }}/{{ item.domains | first | regex_replace('^\*', 'wildcard') }}.pem
     --key-file {{ acme_certs_dest_path }}/{{ item.domains | first  | regex_replace('^\*', 'wildcard') }}.pem.key
+    {{ "--reloadcmd " + acme_deploy_vault_script if acme_vault_push_enabled }}
   args:
     chdir: "~/.acme.sh"
   loop: "{{ acme_cert_domains }}"

@@ -3,6 +3,13 @@
   ansible.builtin.import_tasks:
     file: install.yml
 
+- name: Import prepare_scripts
+  when:
+    - acme_vault_push_enabled
+    - acme_vault_addr != ""
+  ansible.builtin.import_tasks:
+    file: prepare_scripts.yml
+
 - name: Import create certs
   ansible.builtin.import_tasks:
     file: create.yml
