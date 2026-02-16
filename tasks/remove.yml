@@ -1,82 +1,30 @@
+- name: Set wanted domains for removal
+  ansible.builtin.set_fact:
+    acme_wanted_domains: "{{ acme_cert_domains | map(attribute='domains') | map('first') | list }}"
+  when: acme_cert_domains is defined
+
 - name: Get all active certs
-  no_log: "{{ acme_debug_log | default(true) }}"
-  ansible.builtin.shell:
-    cmd: |-
-      set -o pipefail
-      ~/.acme.sh/acme.sh --list | tail -n +2 | awk -F ' ' '{print $1}'
-  register: acme_list_output
+  ansible.builtin.shell: |
+    set -o pipefail
+    ~/.acme.sh/acme.sh --list | tail -n +2 | awk -F ' ' '{print $1}'
   args:
     executable: /bin/bash
+  register: acme_list_output
   changed_when: false
 
-- name: Set facts for domain deletion
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when: >-
-    acme_list_output.stdout is defined and
-    acme_list_output.stdout | length > 0
-  block:
-    - name: Set active domains
-      ansible.builtin.set_fact:
-        acme_active_domains: "{{ acme_list_output.stdout_lines }}"
+- name: Set domains to remove
+  ansible.builtin.set_fact:
+    acme_domains_to_remove: >-
+      {{
+        (acme_list_output.stdout_lines | default([]))
+        | reject('in', acme_wanted_domains | default([]))
+        | list
+      }}
+  when: acme_list_output.stdout_lines is defined and acme_list_output.stdout_lines | length > 0
 
-    - name: Set wanted domains
-      ansible.builtin.set_fact:
-        acme_wanted_domains: "{{ acme_cert_domains | map(attribute='domains') | map('first') | list }}"
-
-    - name: Set domaints to remove
-      ansible.builtin.set_fact:
-        acme_domains_to_remove: "{{ acme_active_domains | reject('in', acme_wanted_domains) | list }}"
-
-- name: Find installed certs to delete
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when: acme_domains_to_remove is defined
-  ansible.builtin.find:
-    paths: "{{ acme_certs_dest_path }}"
-    patterns: "{{ item }}*"
-    file_type: file
+- name: Remove all unwanted certs
+  ansible.builtin.include_tasks: remove_single_cert.yml
   loop: "{{ acme_domains_to_remove }}"
-  register: acme_installed_certs_to_delete
-
-- name: Remove installed certs
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when:
-    - acme_installed_certs_to_delete is defined
-    - acme_installed_certs_to_delete.results is defined
-    - (acme_installed_certs_to_delete.results | map(attribute='files') | flatten | length) > 0
-  ansible.builtin.file:
-    path: "{{ item.path | replace('*', 'wildcard') }}"
-    state: "absent"
-  loop: "{{ acme_installed_certs_to_delete.results | map(attribute='files') | flatten }}"
-
-- name: Find internal cert dir to delete
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when: acme_domains_to_remove is defined
-  ansible.builtin.find:
-    paths: "~/.acme.sh/"
-    patterns: "{{ item }}*"
-    file_type: directory
-  loop: "{{ acme_domains_to_remove }}"
-  register: acme_internal_cert_dir_to_delete
-
-- name: Remove internal cert dir
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when:
-    - acme_internal_cert_dir_to_delete is defined
-    - acme_internal_cert_dir_to_delete.results is defined
-    - (acme_internal_cert_dir_to_delete.results | map(attribute='files') | flatten | length) > 0
-  ansible.builtin.file:
-    path: "{{ item.path }}"
-    state: "absent"
-  loop: "{{ acme_internal_cert_dir_to_delete.results | map(attribute='files') | flatten }}"
-
-- name: Remove certs from cron job
-  no_log: "{{ acme_debug_log | default(true) }}"
-  when: acme_domains_to_remove is defined
-  ansible.builtin.command: >-
-    ./acme.sh --remove -d {{ item }}
-  args:
-    chdir: "~/.acme.sh"
-  register: acme_domain_remove_cron_output
-  changed_when: "'has been removed' in acme_domain_remove_cron_output.stdout"
-  loop: "{{ acme_domains_to_remove }}"
-
+  loop_control:
+    loop_var: domain
+  when: acme_domains_to_remove is defined and acme_domains_to_remove | length > 0

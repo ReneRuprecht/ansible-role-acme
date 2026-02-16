@@ -14,14 +14,12 @@
   loop: "{{ acme_debian_dependencies }}"
 
 - name: Ensure acme clone directory exists
-  become: true
   ansible.builtin.file:
     path: "{{ acme_git_clone_dest | dirname }}"
     state: "directory"
     mode: "0755"
 
 - name: Clone acme repo
-  become: true
   ansible.builtin.git:
     repo: "{{ acme_git_url }}"
     version: "{{ acme_git_version }}"
@@ -29,7 +27,6 @@
     update: "{{ acme_git_update }}"
 
 - name: Install acme.sh
-  become: true
   ansible.builtin.command: >-
     ./acme.sh --install
     {{ "-m " + acme_account_email if acme_account_email else "" }}
@@ -38,7 +35,6 @@
     creates: "~/.acme.sh/acme.sh"
 
 - name: Upgrade acme.sh
-  become: true
   when: acme_upgrade
   ansible.builtin.command: ./acme.sh --upgrade
   args:

@@ -17,11 +17,11 @@
   loop: "{{ acme_cert_domains }}"
   when:
     - >-
-      acme_cert_domains and
+      acme_cert_domains is defined and
       item.domains is defined and
-      item.domains
-    - acme_dns_provider
-    - acme_dns_provider_api_keys
+      item.domains != ""
+    - acme_dns_provider is defined
+    - acme_dns_provider_api_keys is defined
   register: acme_cert_issue_result
   changed_when: >-
     acme_cert_issue_result.rc == 0 and
@@ -42,9 +42,9 @@
     index_var: index
   when:
     - >-
-      acme_cert_domains and
+      acme_cert_domains is defined and
       item.domains is defined and
-      item.domains
+      item.domains != ""
   register: acme_install_cert_result
   changed_when: >-
     acme_cert_issue_result.results[index].changed

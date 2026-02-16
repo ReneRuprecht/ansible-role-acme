@@ -1,0 +1,32 @@
+- name: Find installed cert files
+  ansible.builtin.find:
+    paths: "{{ acme_certs_dest_path }}"
+    patterns: "{{ domain | replace('*', 'wildcard') }}*"
+    file_type: file
+  register: cert_files
+
+- name: Delete installed cert files
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ cert_files.files }}"
+
+- name: Remove cert from acme.sh cron job
+  ansible.builtin.command: ./acme.sh --remove -d {{ domain }}
+  args:
+    chdir: "~/.acme.sh"
+  register: remove_output
+  changed_when: "'has been removed' in remove_output.stdout"
+
+# - name: Find internal cert dir
+#   ansible.builtin.find:
+#     paths: "~/.acme.sh/"
+#     pattern: "{{ domain }}*"
+#     file_type: directory
+#   register: internal_dirs
+
+# - name: Delete internal cert dir
+#   ansible.builtin.file:
+#     path: "{{ item.path }}"
+#     state: absent
+#   loop: "{{ internal_dirs.files | default([]) }}"
