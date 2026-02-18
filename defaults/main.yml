@@ -1,4 +1,11 @@
 ---
+acme_git_version: "master"
+acme_git_update: false
+acme_git_clone_dest: "/home/{{ acme_user }}/acme.sh"
+
+acme_user: "acme"
+acme_group: "acme"
+
 acme_upgrade: false
 # acme_account_email: "example@example.com"
 acme_certs_dest_path: "/etc/acme/certs"
@@ -17,6 +24,9 @@ acme_cert_domains: []
 #
 
 acme_vault_addr: ""
+acme_vault_path: "secret/certs"
+acme_vault_approle_role_id_file: "/etc/vault/role_id"
+acme_vault_approle_secret_id_file: "/etc/vault/secret_id"
 acme_vault_push_enabled: false
 acme_deploy_vault_script_dir: "/opt/acme_scripts"
 acme_deploy_vault_script: "{{ acme_deploy_vault_script_dir }}/vault_deploy.sh"

@@ -1,13 +1,28 @@
 ---
 - name: Ensure acme deploy script dir exists
+  become: true
   ansible.builtin.file:
     path: "{{ acme_deploy_vault_script_dir }}"
     state: "directory"
-    mode: "0755"
+    mode: "0700"
+    owner: "{{ acme_user }}"
+    group: "{{ acme_group }}"
     recurse: true
 
+- name: Ensure vault_push log exists
+  become: true
+  ansible.builtin.file:
+    path: "/var/log/vault_push.log"
+    state: touch
+    mode: "0600"
+    owner: "{{ acme_user }}"
+    group: "{{ acme_group }}"
+
 - name: Copy vault_push script
+  become: true
   ansible.builtin.template:
     src: "vault_push.sh.j2"
     dest: "{{ acme_deploy_vault_script }}"
-    mode: "0755"
+    mode: "0700"
+    owner: "{{ acme_user }}"
+    group: "{{ acme_group }}"

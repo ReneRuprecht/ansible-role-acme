@@ -1,3 +1,4 @@
 .ansible
 .vscode
 Pipfile.lock
+ansible.cfg

@@ -1,3 +1,18 @@
+- name: Create acme group
+  become: true
+  ansible.builtin.group:
+    name: "{{ acme_group }}"
+    system: true
+    state: present
+
+- name: Create acme user
+  become: true
+  ansible.builtin.user:
+    name: "{{ acme_user }}"
+    shell: /bin/bash
+    home: "/home/{{ acme_user }}"
+    create_home: true
+
 - name: Update apt cache.
   when: ansible_os_family == 'Debian'
   become: true
@@ -13,20 +28,27 @@
     state: present
   loop: "{{ acme_debian_dependencies }}"
 
-- name: Ensure acme clone directory exists
-  ansible.builtin.file:
-    path: "{{ acme_git_clone_dest | dirname }}"
-    state: "directory"
-    mode: "0755"
-
 - name: Clone acme repo
+  become: true
   ansible.builtin.git:
     repo: "{{ acme_git_url }}"
     version: "{{ acme_git_version }}"
     dest: "{{ acme_git_clone_dest }}"
     update: "{{ acme_git_update }}"
 
+- name: Set permission
+  become: true
+  ansible.builtin.file:
+    path: "{{ acme_git_clone_dest }}"
+    state: directory
+    mode: "0700"
+    owner: "{{ acme_user }}"
+    group: "{{ acme_group }}"
+    recurse: true
+
 - name: Install acme.sh
+  become_user: "{{ acme_user }}"
+  become: true
   ansible.builtin.command: >-
     ./acme.sh --install
     {{ "-m " + acme_account_email if acme_account_email else "" }}
@@ -36,6 +58,8 @@
 
 - name: Upgrade acme.sh
   when: acme_upgrade
+  become_user: "{{ acme_user }}"
+  become: true
   ansible.builtin.command: ./acme.sh --upgrade
   args:
     chdir: "~/.acme.sh"

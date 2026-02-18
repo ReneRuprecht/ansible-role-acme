@@ -1,10 +1,16 @@
 - name: Ensure certs destination exists
+  become: true
   ansible.builtin.file:
     path: "{{ acme_certs_dest_path }}"
     state: "directory"
-    mode: "0755"
+    mode: "0700"
+    owner: "{{ acme_user }}"
+    group: "{{ acme_group }}"
+    recurse: true
 
 - name: Issue certificates
+  become_user: "{{ acme_user }}"
+  become: true
   ansible.builtin.command: >-
     ./acme.sh --issue -d {{ item.domains | join(" -d ") }}
     --dns {{ acme_dns_provider }}
@@ -31,11 +37,13 @@
     "Domains not changed" not in acme_cert_issue_result.stdout
 
 - name: Install certificates
+  become_user: "{{ acme_user }}"
+  become: true
   ansible.builtin.command: >-
     ./acme.sh --install-cert -d {{ item.domains | first }}
     --fullchain-file {{ acme_certs_dest_path }}/{{ item.domains | first | regex_replace('^\*', 'wildcard') }}.pem
     --key-file {{ acme_certs_dest_path }}/{{ item.domains | first  | regex_replace('^\*', 'wildcard') }}.pem.key
-    {{ "--reloadcmd " + acme_deploy_vault_script if acme_vault_push_enabled }}
+    {{ "--reloadcmd " + acme_deploy_vault_script if acme_vault_push_enabled and acme_deploy_vault_script != "" }}
   args:
     chdir: "~/.acme.sh"
   loop: "{{ acme_cert_domains }}"

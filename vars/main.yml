@@ -5,6 +5,3 @@ acme_debian_dependencies:
   - socat
 
 acme_git_url: "https://github.com/acmesh-official/acme.sh"
-acme_git_version: "master"
-acme_git_update: false
-acme_git_clone_dest: "/usr/local/repo/acme.sh"
