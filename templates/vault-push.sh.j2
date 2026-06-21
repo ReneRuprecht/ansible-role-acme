@@ -3,10 +3,6 @@ set -o errexit
 set -o pipefail
 set -o nounset
 
-# -------------
-# Konfiguration logging
-# -------------
-
 SERVICE_NAME="vault-push"
 ENVIRONMENT="${ENVIRONMENT:-dev}"
 LOG_FILE="/var/log/${SERVICE_NAME}.log"

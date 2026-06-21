@@ -12,7 +12,7 @@
 - name: Ensure vault_push log exists
   become: true
   ansible.builtin.file:
-    path: "/var/log/vault_push.log"
+    path: "/var/log/vault-push.log"
     state: touch
     mode: "0600"
     owner: "{{ acme_user }}"
@@ -21,7 +21,7 @@
 - name: Copy vault_push script
   become: true
   ansible.builtin.template:
-    src: "vault_push.sh.j2"
+    src: "vault-push.sh.j2"
     dest: "{{ acme_deploy_vault_script }}"
     mode: "0700"
     owner: "{{ acme_user }}"
