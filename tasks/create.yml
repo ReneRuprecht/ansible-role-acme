@@ -3,10 +3,9 @@
   ansible.builtin.file:
     path: "{{ acme_certs_dest_path }}"
     state: "directory"
-    mode: "0700"
+    mode: "0750"
     owner: "{{ acme_user }}"
     group: "{{ acme_group }}"
-    recurse: true
 
 - name: Issue certificates
   become_user: "{{ acme_user }}"
@@ -53,7 +52,7 @@
     - >-
       acme_cert_domains is defined and
       item.domains is defined and
-      item.domains != ""
+      item.domains | length > 0
   register: acme_install_cert_result
   changed_when: >-
     acme_cert_issue_result.results[index].changed
